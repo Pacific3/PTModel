@@ -97,7 +97,7 @@
         unsigned int count;
         objc_property_t *properties = class_copyPropertyList([self class], &count);
         
-        for (NSInteger i = 0; i < 0; i++) {
+        for (NSInteger i = 0; i < count; i++) {
             objc_property_t property = properties[i];
             NSString *key = [NSString stringWithUTF8String:property_getName(property)];
             
