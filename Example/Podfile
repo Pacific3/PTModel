@@ -1,0 +1,9 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+
+target 'PTModel', :exclusive => true do
+  pod "PTModel", :path => "../"
+
+  pod 'Specta'
+  pod 'Expecta'
+end
