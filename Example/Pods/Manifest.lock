@@ -1,0 +1,20 @@
+PODS:
+  - Expecta (0.3.2)
+  - PTModel (0.1.0)
+  - Specta (0.4.0)
+
+DEPENDENCIES:
+  - Expecta
+  - PTModel (from `../`)
+  - Specta
+
+EXTERNAL SOURCES:
+  PTModel:
+    :path: ../
+
+SPEC CHECKSUMS:
+  Expecta: ee641011fe10aa1855d487b40e4976dac50ec342
+  PTModel: 1b70ee857378eaf2e71b3fd0f4c3e03ad59e8258
+  Specta: 1df326d6ec48603c77f507a0ab1f89ad2df1c582
+
+COCOAPODS: 0.36.0

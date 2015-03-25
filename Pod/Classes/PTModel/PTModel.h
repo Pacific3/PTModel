@@ -9,5 +9,8 @@
 #import <Foundation/Foundation.h>
 
 @interface PTModel : NSObject
++ (NSArray *)allInstances;
++ (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;
 
+- (BOOL)save;
 @end
