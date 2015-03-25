@@ -8,18 +8,35 @@
 
 #import "PTModel.h"
 
+@interface PTmodelTest : PTModel
+@property (nonatomic, copy) NSString *testString;
+@end
+@implementation PTmodelTest
+@end
+
 SpecBegin(InitialSpecs)
 
-describe(@"these will fail", ^{
+describe(@"Saving objects", ^{
 
-    it(@"can do maths", ^{
-        expect(1).to.equal(2);
-    });
-
-    it(@"can read", ^{
-        expect(@"number").to.equal(@"string");
+    it(@"Can create an object and save it", ^{
+        PTmodelTest *test = [[PTmodelTest alloc] init];
+        test.testString = @"test!";
+        
+        expect([test save]).to.equal(TRUE);
     });
     
+    it(@"Can retrieve an object", ^{
+        PTmodelTest *test = [[PTmodelTest alloc] init];
+        test.testString = @"test!";
+        
+        [test save];
+        
+        NSPredicate *pred = [NSPredicate predicateWithFormat:@"testString = %@", @"test!"];
+        PTmodelTest *retrieved = (PTmodelTest *)[[PTmodelTest instancesFilteredWithPredicate:pred] firstObject];
+        
+        expect(retrieved.testString).to.equal(test.testString);
+    });
+
 });
 
 SpecEnd
