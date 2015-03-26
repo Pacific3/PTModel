@@ -13,4 +13,5 @@
 + (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;
 
 - (BOOL)save;
+- (BOOL)remove;
 @end

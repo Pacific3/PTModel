@@ -65,6 +65,24 @@
     return NO;
 }
 
+- (BOOL)removeInstance:(PTModel *)instance
+{
+    if (!instance) {
+        return NO;
+    }
+    
+    [self loadInstances];
+    
+    NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
+    if ([instances containsObject:instance]) {
+        [instances removeObject:instance];
+        
+        return [NSKeyedArchiver archiveRootObject:instances toFile:__path];
+    }
+    
+    return NO;
+}
+
 @end
 
 @interface PTModel () <NSCoding>
@@ -85,6 +103,11 @@
 - (BOOL)save;
 {
     return [[[PTModelManager alloc] init] addInstance:self];
+}
+
+- (BOOL)remove
+{
+    return [[[PTModelManager alloc] init] removeInstance:self];
 }
 
 
