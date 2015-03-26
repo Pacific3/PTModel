@@ -17,6 +17,10 @@
 SpecBegin(InitialSpecs)
 
 describe(@"Saving objects", ^{
+    
+    beforeEach(^{
+        [PTmodelTest removeAllInstances];
+    });
 
     it(@"Can create an object and save it", ^{
         PTmodelTest *test = [[PTmodelTest alloc] init];
@@ -35,6 +39,18 @@ describe(@"Saving objects", ^{
         PTmodelTest *retrieved = (PTmodelTest *)[[PTmodelTest instancesFilteredWithPredicate:pred] firstObject];
         
         expect(retrieved.testString).to.equal(test.testString);
+    });
+    
+    it(@"Can remove an object", ^{
+        PTmodelTest *test = [[PTmodelTest alloc] init];
+        test.testString = @"test!";
+        
+        [test save];
+        expect([PTmodelTest allInstances].count).to.equal(1);
+        
+        
+        [test remove];
+        expect([PTmodelTest allInstances].count).to.equal(0);
     });
 
 });
