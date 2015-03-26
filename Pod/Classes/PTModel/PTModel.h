@@ -9,8 +9,14 @@
 #import <Foundation/Foundation.h>
 
 @interface PTModel : NSObject
+@property (nonatomic, readonly) BOOL isSaved;
+
 + (NSArray *)allInstances;
 + (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;
 
 - (BOOL)save;
+- (BOOL)remove;
+
++ (BOOL)removeAllInstances;
+
 @end
