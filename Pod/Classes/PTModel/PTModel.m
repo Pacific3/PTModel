@@ -73,14 +73,19 @@
     
     [self loadInstances];
     
-    NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
-    if ([instances containsObject:instance]) {
-        [instances removeObject:instance];
-        
-        return [NSKeyedArchiver archiveRootObject:instances toFile:__path];
-    }
+    __block BOOL res;
     
-    return NO;
+    NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
+    [instances enumerateObjectsUsingBlock:^(PTModel *mod, NSUInteger idx, BOOL *stop) {
+        if ([mod isEqual:instance]) {
+            *stop = YES;
+            
+            [instances removeObjectAtIndex:idx];
+            res = [NSKeyedArchiver archiveRootObject:instances toFile:__path];
+        }
+    }];
+    
+    return res;
 }
 
 - (BOOL)isInstanceSaved:(PTModel *)instance
@@ -149,6 +154,16 @@
     return [[[PTModelManager alloc] init] isInstanceSaved:self];
 }
 
+- (BOOL)isEqual:(id)object
+{
+    __block BOOL eq;
+    [self enumerateObjectKeysWithBlock:^(NSString *key) {
+        eq = [[self valueForKey:key] isEqual:[object valueForKey:key]];
+    }];
+    
+    return eq;
+}
+
 
 #pragma mark - NSCoding
 
@@ -156,17 +171,9 @@
 {
     self = [super init];
     if (self) {
-        unsigned int count;
-        objc_property_t *properties = class_copyPropertyList([self class], &count);
-        
-        for (NSInteger i = 0; i < count; i++) {
-            objc_property_t property = properties[i];
-            NSString *key = [NSString stringWithUTF8String:property_getName(property)];
-            
+        [self enumerateObjectKeysWithBlock:^(NSString *key) {
             [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
-        }
-        
-        free(properties);
+        }];
     }
     
     return self;
@@ -174,17 +181,26 @@
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
-    unsigned int count;
-    objc_property_t *properties = class_copyPropertyList([self class], &count);
-    
-    for (NSUInteger i = 0; i < count; i++) {
-        objc_property_t property = properties[i];
-        NSString *key = [NSString stringWithUTF8String:property_getName(property)];
-        
+    [self enumerateObjectKeysWithBlock:^(NSString *key) {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];
+    }];
+}
+
+- (void)enumerateObjectKeysWithBlock:(void (^)(NSString *key))block
+{
+    if (block) {
+        unsigned int count;
+        objc_property_t *properties = class_copyPropertyList([self class], &count);
+        
+        for (NSInteger i = 0; i < count; i++) {
+            objc_property_t property = properties[i];
+            NSString *key = [NSString stringWithUTF8String:property_getName(property)];
+            
+            block(key);
+        }
+        
+        free(properties);
     }
-    
-    free(properties);
 }
 
 @end
