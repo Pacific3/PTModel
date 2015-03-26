@@ -97,6 +97,13 @@
     return NO;
 }
 
+- (BOOL)clear
+{
+    [self loadInstances];
+    
+    return [NSKeyedArchiver archiveRootObject:nil toFile:__path];
+}
+
 @end
 
 @interface PTModel () <NSCoding> {
@@ -116,6 +123,11 @@
     return [[self allInstances] filteredArrayUsingPredicate:predicate];
 }
 
++ (BOOL)removeAllInstances;
+{
+    return [[[PTModelManager alloc] init] clear];
+}
+
 - (BOOL)save;
 {
     BOOL savedCorrectly = [[[PTModelManager alloc] init] addInstance:self];
@@ -127,12 +139,12 @@
     return NO;
 }
 
-- (BOOL)remove
+- (BOOL)remove;
 {
     return [[[PTModelManager alloc] init] removeInstance:self];
 }
 
-- (BOOL)isSaved
+- (BOOL)isSaved;
 {
     return [[[PTModelManager alloc] init] isInstanceSaved:self];
 }

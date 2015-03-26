@@ -16,4 +16,7 @@
 
 - (BOOL)save;
 - (BOOL)remove;
+
++ (BOOL)removeAllInstances;
+
 @end
