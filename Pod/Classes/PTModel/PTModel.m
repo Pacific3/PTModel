@@ -83,9 +83,25 @@
     return NO;
 }
 
+- (BOOL)isInstanceSaved:(PTModel *)instance
+{
+    if (!instance) {
+        return NO;
+    }
+    
+    [self loadInstances];
+    if ([self.instances containsObject:instance]) {
+        return YES;
+    }
+    
+    return NO;
+}
+
 @end
 
-@interface PTModel () <NSCoding>
+@interface PTModel () <NSCoding> {
+    BOOL __saved;
+}
 @end
 
 @implementation PTModel
@@ -102,12 +118,23 @@
 
 - (BOOL)save;
 {
-    return [[[PTModelManager alloc] init] addInstance:self];
+    BOOL savedCorrectly = [[[PTModelManager alloc] init] addInstance:self];
+    if (savedCorrectly) {
+        __saved = YES;
+        return __saved;
+    }
+    
+    return NO;
 }
 
 - (BOOL)remove
 {
     return [[[PTModelManager alloc] init] removeInstance:self];
+}
+
+- (BOOL)isSaved
+{
+    return [[[PTModelManager alloc] init] isInstanceSaved:self];
 }
 
 
