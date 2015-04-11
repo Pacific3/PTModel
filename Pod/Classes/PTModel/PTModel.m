@@ -9,6 +9,8 @@
 #import "PTModel.h"
 #import <objc/runtime.h>
 
+NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 // MARK - PTModelManager
 
 @interface PTModelManager : NSObject
@@ -17,11 +19,22 @@
 
 @interface PTModelManager () {
     NSString *__path;
-    NSArray *__instances;
 }
 @end
 
 @implementation PTModelManager
+
++ (instancetype)sharedManager
+{
+    static PTModelManager *__instance = nil;
+    static dispatch_once_t onceToken;
+    
+    dispatch_once(&onceToken, ^{
+        __instance = [[PTModelManager alloc] init];
+    });
+    
+    return __instance;
+}
 
 - (instancetype)init
 {
@@ -37,10 +50,10 @@
 
 - (void)loadInstances
 {
-    __instances = [NSKeyedUnarchiver unarchiveObjectWithFile:__path];
+    _instances = [NSKeyedUnarchiver unarchiveObjectWithFile:__path];
     
-    if (!__instances) {
-        __instances = [NSArray array];
+    if (!_instances) {
+        _instances = [NSArray array];
     }
 }
 
@@ -48,7 +61,7 @@
 {
     [self loadInstances];
     
-    return __instances;
+    return _instances;
 }
 
 - (BOOL)addInstance:(PTModel *)instance
@@ -59,10 +72,33 @@
         NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
         [instances addObject:instance];
         
-        return [NSKeyedArchiver archiveRootObject:[NSArray arrayWithArray:instances] toFile:__path];
+        return [NSKeyedArchiver archiveRootObject:instances toFile:__path];
     }
     
     return NO;
+}
+
+- (BOOL)updateInstance:(PTModel *)instance
+{
+    if (!instance) {
+        return NO;
+    }
+    
+    [self loadInstances];
+    
+    __block BOOL replaced;
+    
+    NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
+    [instances enumerateObjectsUsingBlock:^(PTModel *obj, NSUInteger idx, BOOL *stop) {
+        if ([obj isEqual:instance]) {
+            *stop = YES;
+            
+            [instances replaceObjectAtIndex:idx withObject:instance];
+            replaced = [NSKeyedArchiver archiveRootObject:instances toFile:__path];
+        }
+    }];
+    
+    return replaced;
 }
 
 - (BOOL)removeInstance:(PTModel *)instance
@@ -88,39 +124,22 @@
     return res;
 }
 
-- (BOOL)isInstanceSaved:(PTModel *)instance
-{
-    if (!instance) {
-        return NO;
-    }
-    
-    [self loadInstances];
-    if ([self.instances containsObject:instance]) {
-        return YES;
-    }
-    
-    return NO;
-}
-
 - (BOOL)clear
 {
-    [self loadInstances];
-    
     return [NSKeyedArchiver archiveRootObject:nil toFile:__path];
 }
 
 @end
 
-@interface PTModel () <NSCoding> {
-    BOOL __saved;
-}
+@interface PTModel () <NSCoding>
+@property (nonatomic, readwrite) NSString *_guid;
 @end
 
 @implementation PTModel
 
 + (NSArray *)allInstances;
 {
-    return [[PTModelManager alloc] init].instances;
+    return [PTModelManager sharedManager].instances;
 }
 
 + (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;
@@ -130,38 +149,49 @@
 
 + (BOOL)removeAllInstances;
 {
-    return [[[PTModelManager alloc] init] clear];
+    return [[PTModelManager sharedManager] clear];
 }
 
 - (BOOL)save;
 {
-    BOOL savedCorrectly = [[[PTModelManager alloc] init] addInstance:self];
-    if (savedCorrectly) {
-        __saved = YES;
-        return __saved;
+    if ([self._guid isEqualToString:@""] || !self._guid) { // Going to be saved for the first time
+        do {
+            self._guid = [self randomStringWithLength:20];
+        } while (![self isUniqueGUID:self._guid]);
+        
+        return [[PTModelManager sharedManager] addInstance:self];
     }
     
-    return NO;
+    return [[PTModelManager sharedManager] updateInstance:self];
 }
 
 - (BOOL)remove;
 {
-    return [[[PTModelManager alloc] init] removeInstance:self];
+    return [[PTModelManager sharedManager] removeInstance:self];
 }
 
-- (BOOL)isSaved;
+- (BOOL)isEqual:(PTModel *)object
 {
-    return [[[PTModelManager alloc] init] isInstanceSaved:self];
+    return [self._guid isEqualToString:object._guid];
 }
 
-- (BOOL)isEqual:(id)object
-{
-    __block BOOL eq;
-    [self enumerateObjectKeysWithBlock:^(NSString *key) {
-        eq = [[self valueForKey:key] isEqual:[object valueForKey:key]];
-    }];
+
+#pragma mark - Misc
+
+- (NSString *)randomStringWithLength:(int)len {
     
-    return eq;
+    NSMutableString *randomString = [NSMutableString stringWithCapacity:len];
+    
+    for (int i=0; i<len; i++) {
+        [randomString appendFormat:@"%C", [letters characterAtIndex:arc4random_uniform((u_int32_t)[letters length])]];
+    }
+    
+    return randomString;
+}
+
+- (BOOL)isUniqueGUID:(NSString *)guid
+{
+    return [[self class] instancesFilteredWithPredicate:[NSPredicate predicateWithFormat:@"_guid == %@", guid]].count == 0;
 }
 
 
@@ -189,8 +219,18 @@
 - (void)enumerateObjectKeysWithBlock:(void (^)(NSString *key))block
 {
     if (block) {
+        unsigned int subcount;
+        unsigned int supercount;
+        
         unsigned int count;
-        objc_property_t *properties = class_copyPropertyList([self class], &count);
+        objc_property_t *subProperties = class_copyPropertyList([self class], &subcount);
+        objc_property_t *superProperties = class_copyPropertyList([self superclass], &supercount);
+        
+        count = subcount + supercount;
+        objc_property_t *properties = malloc(count * sizeof(objc_property_t*));
+        
+        memcpy(properties, subProperties, subcount * sizeof(objc_property_t*));
+        memcpy(properties + subcount, superProperties, supercount * sizeof(objc_property_t*));
         
         for (NSInteger i = 0; i < count; i++) {
             objc_property_t property = properties[i];

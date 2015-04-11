@@ -38,7 +38,7 @@ describe(@"Saving objects", ^{
         NSPredicate *pred = [NSPredicate predicateWithFormat:@"testString = %@", @"test!"];
         PTmodelTest *retrieved = (PTmodelTest *)[[PTmodelTest instancesFilteredWithPredicate:pred] firstObject];
         
-        expect(retrieved.testString).to.equal(test.testString);
+        expect(retrieved.testString).to.equal(@"test!");
     });
     
     it(@"Can remove an object", ^{
@@ -51,6 +51,47 @@ describe(@"Saving objects", ^{
         
         [test remove];
         expect([PTmodelTest allInstances].count).to.equal(0);
+    });
+    
+    it(@"Can remove all objects", ^{
+        PTmodelTest *test1 = [[PTmodelTest alloc] init];
+        test1.testString = @"Test1";
+        
+        [test1 save];
+        PTmodelTest *test2 = [[PTmodelTest alloc] init];
+        test2.testString = @"Test1";
+        
+        [test2 save];
+        PTmodelTest *test3 = [[PTmodelTest alloc] init];
+        test2.testString = @"Test1";
+        
+        [test3 save];
+        
+        expect([PTmodelTest allInstances].count).to.equal(3);
+        
+        [PTmodelTest removeAllInstances];
+        
+        expect([PTmodelTest allInstances].count).to.equal(0);
+    });
+    
+    it(@"Can update an object", ^{
+        PTmodelTest *test = [[PTmodelTest alloc] init];
+        test.testString = @"test!";
+        
+        [test save];
+        
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"testString = %@", @"test!"];
+        PTmodelTest *retrieved = [[PTmodelTest instancesFilteredWithPredicate:predicate] firstObject];
+        
+        expect(retrieved.testString).to.equal(@"test!");
+        
+        test.testString = @"updated!";
+        [test save];
+        
+        NSPredicate *updatedPredicate = [NSPredicate predicateWithFormat:@"testString = %@", @"updated!"];
+        retrieved = [[PTmodelTest instancesFilteredWithPredicate:updatedPredicate] firstObject];
+        
+        expect(retrieved.testString).to.equal(@"updated!");
     });
 
 });
