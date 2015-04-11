@@ -237,10 +237,10 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
         objc_property_t *superProperties = class_copyPropertyList([self superclass], &supercount);
         
         count = subcount + supercount;
-        objc_property_t *properties = malloc(count * sizeof(objc_property_t*));
+        objc_property_t *properties = malloc(count * sizeof(objc_property_t));
         
-        memcpy(properties, subProperties, subcount * sizeof(objc_property_t*));
-        memcpy(properties + subcount, superProperties, supercount * sizeof(objc_property_t*));
+        memcpy(properties, subProperties, subcount * sizeof(objc_property_t));
+        memcpy(properties + subcount, superProperties, supercount * sizeof(objc_property_t));
         
         for (NSInteger i = 0; i < count; i++) {
             objc_property_t property = properties[i];
