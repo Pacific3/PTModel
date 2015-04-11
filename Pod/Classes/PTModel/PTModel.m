@@ -9,6 +9,8 @@
 #import "PTModel.h"
 #import <objc/runtime.h>
 
+NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 // MARK - PTModelManager
 
 @interface PTModelManager : NSObject
@@ -22,6 +24,18 @@
 @end
 
 @implementation PTModelManager
+
++ (instancetype)sharedManager
+{
+    static PTModelManager *__instance = nil;
+    static dispatch_once_t onceToken;
+    
+    dispatch_once(&onceToken, ^{
+        __instance = [[PTModelManager alloc] init];
+    });
+    
+    return __instance;
+}
 
 - (instancetype)init
 {
@@ -111,16 +125,14 @@
 
 @end
 
-@interface PTModel () <NSCoding> {
-    BOOL __saved;
-}
+@interface PTModel () <NSCoding>
 @end
 
 @implementation PTModel
 
 + (NSArray *)allInstances;
 {
-    return [[PTModelManager alloc] init].instances;
+    return [PTModelManager sharedManager].instances;
 }
 
 + (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;
@@ -130,28 +142,19 @@
 
 + (BOOL)removeAllInstances;
 {
-    return [[[PTModelManager alloc] init] clear];
+    return [[PTModelManager sharedManager] clear];
 }
 
 - (BOOL)save;
 {
-    BOOL savedCorrectly = [[[PTModelManager alloc] init] addInstance:self];
-    if (savedCorrectly) {
-        __saved = YES;
-        return __saved;
-    }
+    [[PTModelManager sharedManager] addInstance:self];
     
     return NO;
 }
 
 - (BOOL)remove;
 {
-    return [[[PTModelManager alloc] init] removeInstance:self];
-}
-
-- (BOOL)isSaved;
-{
-    return [[[PTModelManager alloc] init] isInstanceSaved:self];
+    return [[PTModelManager sharedManager] removeInstance:self];
 }
 
 - (BOOL)isEqual:(id)object
@@ -162,6 +165,20 @@
     }];
     
     return eq;
+}
+
+
+#pragma mark - Misc
+
+- (NSString *)randomStringWithLength:(int)len {
+    
+    NSMutableString *randomString = [NSMutableString stringWithCapacity:len];
+    
+    for (int i=0; i<len; i++) {
+        [randomString appendFormat:@"%C", [letters characterAtIndex:arc4random_uniform((u_int32_t)[letters length])]];
+    }
+    
+    return randomString;
 }
 
 
