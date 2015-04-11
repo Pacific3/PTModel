@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 @interface PTModel : NSObject
-@property (nonatomic, readonly) NSString *guid;
+@property (nonatomic, readonly) NSString *_guid;
 
 + (NSArray *)allInstances;
 + (NSArray *)instancesFilteredWithPredicate:(NSPredicate *)predicate;

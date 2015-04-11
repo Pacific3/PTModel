@@ -19,7 +19,6 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 @interface PTModelManager () {
     NSString *__path;
-    NSArray *__instances;
 }
 @end
 
@@ -51,10 +50,10 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 - (void)loadInstances
 {
-    __instances = [NSKeyedUnarchiver unarchiveObjectWithFile:__path];
+    _instances = [NSKeyedUnarchiver unarchiveObjectWithFile:__path];
     
-    if (!__instances) {
-        __instances = [NSArray array];
+    if (!_instances) {
+        _instances = [NSArray array];
     }
 }
 
@@ -62,7 +61,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 {
     [self loadInstances];
     
-    return __instances;
+    return _instances;
 }
 
 - (BOOL)addInstance:(PTModel *)instance
@@ -73,10 +72,33 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
         NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
         [instances addObject:instance];
         
-        return [NSKeyedArchiver archiveRootObject:[NSArray arrayWithArray:instances] toFile:__path];
+        return [NSKeyedArchiver archiveRootObject:instances toFile:__path];
     }
     
     return NO;
+}
+
+- (BOOL)updateInstance:(PTModel *)instance
+{
+    if (!instance) {
+        return NO;
+    }
+    
+    [self loadInstances];
+    
+    __block BOOL replaced;
+    
+    NSMutableArray *instances = [NSMutableArray arrayWithArray:self.instances];
+    [instances enumerateObjectsUsingBlock:^(PTModel *obj, NSUInteger idx, BOOL *stop) {
+        if ([obj isEqual:instance]) {
+            *stop = YES;
+            
+            [instances replaceObjectAtIndex:idx withObject:instance];
+            replaced = [NSKeyedArchiver archiveRootObject:instances toFile:__path];
+        }
+    }];
+    
+    return replaced;
 }
 
 - (BOOL)removeInstance:(PTModel *)instance
@@ -102,30 +124,15 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     return res;
 }
 
-- (BOOL)isInstanceSaved:(PTModel *)instance
-{
-    if (!instance) {
-        return NO;
-    }
-    
-    [self loadInstances];
-    if ([self.instances containsObject:instance]) {
-        return YES;
-    }
-    
-    return NO;
-}
-
 - (BOOL)clear
 {
-    [self loadInstances];
-    
     return [NSKeyedArchiver archiveRootObject:nil toFile:__path];
 }
 
 @end
 
 @interface PTModel () <NSCoding>
+@property (nonatomic, readwrite) NSString *_guid;
 @end
 
 @implementation PTModel
@@ -147,9 +154,15 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 - (BOOL)save;
 {
-    [[PTModelManager sharedManager] addInstance:self];
+    if ([self._guid isEqualToString:@""] || !self._guid) { // Going to be saved for the first time
+        do {
+            self._guid = [self randomStringWithLength:20];
+        } while (![self isUniqueGUID:self._guid]);
+        
+        return [[PTModelManager sharedManager] addInstance:self];
+    }
     
-    return NO;
+    return [[PTModelManager sharedManager] updateInstance:self];
 }
 
 - (BOOL)remove;
@@ -157,14 +170,9 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     return [[PTModelManager sharedManager] removeInstance:self];
 }
 
-- (BOOL)isEqual:(id)object
+- (BOOL)isEqual:(PTModel *)object
 {
-    __block BOOL eq;
-    [self enumerateObjectKeysWithBlock:^(NSString *key) {
-        eq = [[self valueForKey:key] isEqual:[object valueForKey:key]];
-    }];
-    
-    return eq;
+    return [self._guid isEqualToString:object._guid];
 }
 
 
@@ -179,6 +187,11 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     }
     
     return randomString;
+}
+
+- (BOOL)isUniqueGUID:(NSString *)guid
+{
+    return [[self class] instancesFilteredWithPredicate:[NSPredicate predicateWithFormat:@"_guid == %@", guid]].count == 0;
 }
 
 
@@ -206,8 +219,18 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 - (void)enumerateObjectKeysWithBlock:(void (^)(NSString *key))block
 {
     if (block) {
+        unsigned int subcount;
+        unsigned int supercount;
+        
         unsigned int count;
-        objc_property_t *properties = class_copyPropertyList([self class], &count);
+        objc_property_t *subProperties = class_copyPropertyList([self class], &subcount);
+        objc_property_t *superProperties = class_copyPropertyList([self superclass], &supercount);
+        
+        count = subcount + supercount;
+        objc_property_t *properties = malloc(count * sizeof(objc_property_t*));
+        
+        memcpy(properties, subProperties, subcount * sizeof(objc_property_t*));
+        memcpy(properties + subcount, superProperties, supercount * sizeof(objc_property_t*));
         
         for (NSInteger i = 0; i < count; i++) {
             objc_property_t property = properties[i];
