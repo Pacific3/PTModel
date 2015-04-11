@@ -5,16 +5,13 @@
 [![License](https://img.shields.io/cocoapods/l/PTModel.svg?style=flat)](http://cocoapods.org/pods/PTModel)
 [![Platform](https://img.shields.io/cocoapods/p/PTModel.svg?style=flat)](http://cocoapods.org/pods/PTModel)
 
-`PTModel` is a simple objet store for persisting data on iOS applications. 
+`PTModel` is a simple object store for persisting data on iOS applications.
 
 **Please note:** this is in no way an attempt to replace `CoreData`. Its way far from that. If you're looking for an alternative for `CoreData`, you may want to take a look at [`FCModel`](htp://github.com/marcoarment/FCModel).
 
-
-## Usage
-
-To run the example project, clone the repo, and run `pod install` from the Example directory first.
-
 ---
+# Usage
+
 
 To use `PTModel`, you just need to subclass it:
 
@@ -35,26 +32,69 @@ To use `PTModel`, you just need to subclass it:
 @end
 ```
 
-Then, you can create instances of `Record` and save them:
+## Saving objects
 
 ```objc
-Record *newRecord = [Record new];
-
+Record *newRecord = [Record new]; // Create a new object
 newRecord.title = @"Divine Discontent";
 newRecord.band = @"Sixpence None The Richer";
 
-[newRecord save]; // Save this record to the object store.
+[newRecord save]; // Save your object to the store
 ```
 
-In this version, you can retrieve an object by *querying* for it:
+<br>
+## Retrieving objects
+
+In this version of `PTModel` you can retrieve objects by *querying* for them:
 
 ```objc
-NSPredicate *pred = [NSPredicate predicateWithFormat:@"title = %@", @"Days Are Gone"];
-Record *myFavoriteRecord = (Record *)[[Record instancesFilteredWithPredicate:pred] firstObject];
+NSPredicate *predicate = [NSPredicate predicateWithFormat:@"title = %@", @"Divine Discontent"];
+Record *retrievedRecord = [[Record instancesFilteredWithPredicate:predicate] firstObject];
 ```
 
+Each instance of your subclass also has a `guid` property that is set right before the object is first saved. This is a unique ID, and you can use it to retrieve a specific object, too:
 
-## Installation
+```objc
+Record *favouriteRecord = [Record new];
+favouriteRecord.title = @"Strangeland";
+favouriteRecord.band = @"Keane";
+
+[favouriteRecord save]; // Here, the guid property is set on favouriteRecord
+
+NSString *recordId = favouriteRecord.guid;
+Record *recordToShare = [Record instanceWithId:recordId];
+```
+
+<br>
+## Updating an object
+
+If you have an instance of your subclass of `PTModel`, you can simply modify one of its properties and call `save` on it to persist the changes.
+
+```objc
+// Using favouriteRecord from above...
+favouriteRecord.title = @"Night Train";
+
+[favouriteRecord save];
+```
+
+<br>
+## Deleting an object
+
+You can call `remove` on your `PTModel` subclass instance to delete it from the store.
+
+```objc
+[favouriteRecord remove];
+```
+
+If you want to empty your whole store, you can call `removeAllInstances` on your subclass:
+
+```objc
+[Record removeAllInstances];
+```
+<br>
+
+---
+# Installation
 
 `PTModel` is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
@@ -62,11 +102,15 @@ it, simply add the following line to your Podfile:
 ```ruby
 pod "PTModel"
 ```
+<br>
 
-## Author
+---
+# Author
 
 Oscar Swanros @ Pacific3, [hola@pacific3.net](mailto:hola@pacific3.net)
+<br>
 
+---
 ## License
 
 `PTModel` is available under the MIT license. See the LICENSE file for more info.

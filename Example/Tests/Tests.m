@@ -29,7 +29,7 @@ describe(@"Saving objects", ^{
         expect([test save]).to.equal(TRUE);
     });
     
-    it(@"Can retrieve an object", ^{
+    it(@"Can retrieve an object by querying for it", ^{
         PTmodelTest *test = [[PTmodelTest alloc] init];
         test.testString = @"test!";
         
@@ -39,6 +39,17 @@ describe(@"Saving objects", ^{
         PTmodelTest *retrieved = (PTmodelTest *)[[PTmodelTest instancesFilteredWithPredicate:pred] firstObject];
         
         expect(retrieved.testString).to.equal(@"test!");
+    });
+    
+    it(@"Can retrieve an object by its id", ^{
+        PTmodelTest *test = [[PTmodelTest alloc] init];
+        test.testString = @"tes11!";
+        
+        [test save];
+        
+        PTmodelTest *retrieved = [PTmodelTest instanceWithId:test.guid];
+        
+        expect(retrieved.testString).to.equal(@"tes11!");
     });
     
     it(@"Can remove an object", ^{
