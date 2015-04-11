@@ -132,7 +132,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 @end
 
 @interface PTModel () <NSCoding>
-@property (nonatomic, readwrite) NSString *_guid;
+@property (nonatomic, readwrite) NSString *guid;
 @end
 
 @implementation PTModel
@@ -147,6 +147,16 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     return [[self allInstances] filteredArrayUsingPredicate:predicate];
 }
 
++ (instancetype)instanceWithId:(NSString *)instanceId
+{
+    id object = [[[self allInstances] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"guid = %@", instanceId]] firstObject];
+    if (object) {
+        return object;
+    }
+    
+    return nil;
+}
+
 + (BOOL)removeAllInstances;
 {
     return [[PTModelManager sharedManager] clear];
@@ -154,10 +164,10 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 - (BOOL)save;
 {
-    if ([self._guid isEqualToString:@""] || !self._guid) { // Going to be saved for the first time
+    if ([self.guid isEqualToString:@""] || !self.guid) { // Going to be saved for the first time
         do {
-            self._guid = [self randomStringWithLength:20];
-        } while (![self isUniqueGUID:self._guid]);
+            self.guid = [self randomStringWithLength:20];
+        } while (![self isUniqueGUID:self.guid]);
         
         return [[PTModelManager sharedManager] addInstance:self];
     }
@@ -172,7 +182,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 - (BOOL)isEqual:(PTModel *)object
 {
-    return [self._guid isEqualToString:object._guid];
+    return [self.guid isEqualToString:object.guid];
 }
 
 
