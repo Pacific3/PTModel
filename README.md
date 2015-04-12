@@ -7,11 +7,22 @@
 
 `PTModel` is a simple object store for persisting data on iOS applications.
 
+
+---
+# When to use `PTModel`
+
 **Please note:** this is in no way an attempt to replace `CoreData`. Its way far from that. If you're looking for an alternative for `CoreData`, you may want to take a look at [`FCModel`](htp://github.com/marcoarment/FCModel).
+
+`PTModel` serves well when you only need to persist a set of data, without worrying too much about performance.
+
+1. Save some user configuration
+2. Persist data between app launches
+3. Some kind of cache, maybe?
+
+`PTModel` is not designed to be a full-featured object graph. If what you need is save multiple entities, related to each other, what you want is to use `CoreData`.
 
 ---
 # Usage
-
 
 To use `PTModel`, you just need to subclass it:
 
