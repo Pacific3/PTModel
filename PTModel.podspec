@@ -9,13 +9,13 @@
 
 Pod::Spec.new do |s|
   s.name             = "PTModel"
-  s.version          = "0.3.2"
+  s.version          = "0.3.3"
   s.summary          = "PTModel is a simple object store for iOS apps."
   s.homepage         = "https://github.com/Pacific3/PTModel"
   # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
   s.license          = 'MIT'
   s.author           = { "Oscar Swanros @ Pacific3" => "hola@pacific3.net" }
-  s.source           = { :git => "https://github.com/Pacific3/PTModel.git", :tag => "v0.3.2" }
+  s.source           = { :git => "https://github.com/Pacific3/PTModel.git", :tag => "v0.3.3" }
   # s.social_media_url = 'https://twitter.com/Pacific3'
 
   s.platform     = :ios, '7.0'
