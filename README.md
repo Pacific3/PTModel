@@ -1,6 +1,5 @@
 # PTModel
 
-[![CI Status](http://img.shields.io/travis/Oscar Swanros/PTModel.svg?style=flat)](https://travis-ci.org/Oscar Swanros/PTModel)
 [![Version](https://img.shields.io/cocoapods/v/PTModel.svg?style=flat)](http://cocoapods.org/pods/PTModel)
 [![License](https://img.shields.io/cocoapods/l/PTModel.svg?style=flat)](http://cocoapods.org/pods/PTModel)
 [![Platform](https://img.shields.io/cocoapods/p/PTModel.svg?style=flat)](http://cocoapods.org/pods/PTModel)
@@ -9,6 +8,7 @@
 
 
 ---
+
 # When to use `PTModel`
 
 **Please note:** this is in no way an attempt to replace `CoreData`. Its way far from that. If you're looking for an alternative for `CoreData`, you may want to take a look at [`FCModel`](htp://github.com/marcoarment/FCModel).
@@ -22,6 +22,7 @@
 `PTModel` is not designed to be a full-featured object graph. If what you need is save multiple entities, related to each other, what you want is to use `CoreData`.
 
 ---
+
 # Usage
 
 To use `PTModel`, you just need to subclass it:
@@ -53,7 +54,6 @@ newRecord.band = @"Sixpence None The Richer";
 [newRecord save]; // Save your object to the store
 ```
 
-<br>
 ## Retrieving objects
 
 In this version of `PTModel` you can retrieve objects by *querying* for them:
@@ -76,7 +76,6 @@ NSString *recordId = favouriteRecord.guid;
 Record *recordToShare = [Record instanceWithId:recordId];
 ```
 
-<br>
 ## Updating an object
 
 If you have an instance of your subclass of `PTModel`, you can simply modify one of its properties and call `save` on it to persist the changes.
@@ -88,7 +87,6 @@ favouriteRecord.title = @"Night Train";
 [favouriteRecord save];
 ```
 
-<br>
 ## Deleting an object
 
 You can call `remove` on your `PTModel` subclass instance to delete it from the store.
@@ -102,7 +100,6 @@ If you want to empty your whole store, you can call `removeAllInstances` on your
 ```objc
 [Record removeAllInstances];
 ```
-<br>
 
 ---
 # Installation
